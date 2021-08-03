@@ -15,66 +15,56 @@
 	<link rel="stylesheet" type="text/css" href="./src/main.css">
 </head>
 <body>
-	<!-- Header -->
-	<%- include('../partials/_header') -%>
-	<div class="container center">
-		<!-- Current Temps -->
-		
-		<div class="row">
-			<div class="col-sm"></div>
-			<div class="col-sm">
-				<form action="temps.php" method="POST">
-					<label for="sensor_id">Sensor:</label>
-					<select id="sensor_id" name="sensor_id">
-						<option value="28-00000676d99f">Living Room (Head)</option>
-						<option value="28-000007297e74">Living Room (Ceiling)</option>
-						<option value="28-000006779ad0">28-000006779ad0</option>
-						<option value="28-000006788573">28-000006788573</option>
-						<option value="28-000004d07f35">28-000004d07f35</option>
-						<option value="28-00000728fb18">28-00000728fb18</option>
-					</select>
-					<label for="time_range">Time:</label>
-					<input type="datetime" name="time_range">
-					<label for="interval">Interval:</label>
-					<select id="interval" name="interval">
-						<option value="5m">5 minutes</option>
-						<option value="30m">30 minutes</option>
-						<option value="1h">1 hour</option>
-						<option value="6h">6 hours</option>
-						<option value="12h">12 hours</option>
-						<option value="1d">1 day</option>
-					</select>
-					<input type="submit" value="Submit">
-				</form>
-				<br>
-			</div>
-			<div class="col-sm"></div>
+	
+	<div class="box">
+		<div class="row header">
+			<!-- Header -->
+			<%- include('../partials/_header') -%>
+			<!-- Sensor, Datetime, and Interval Selection -->
+			<form action="temps" method="POST">
+				<label for="sensor_id">Sensor:</label>
+				<select id="sensor_id" name="sensor_id">
+					<option value="28-00000676d99f">Living Room (Head)</option>
+					<option value="28-000007297e74">Living Room (Ceiling)</option>
+					<option value="28-000006779ad0">28-000006779ad0</option>
+					<option value="28-000006788573">28-000006788573</option>
+					<option value="28-000004d07f35">28-000004d07f35</option>
+					<option value="28-00000728fb18">28-00000728fb18</option>
+				</select>
+				<label for="begin">Begin:</label>
+				<input type="datetime-local" name="begin" value="<%= begin %>">
+				<label for="end">End:</label>
+				<input type="datetime-local" name="end" value="<%= end %>">
+				<label for="interval">Interval:</label>
+				<select id="interval" name="interval">
+					<option value="5m">5 minutes</option>
+					<option value="30m">30 minutes</option>
+					<option value="1h">1 hour</option>
+					<option value="6h">6 hours</option>
+					<option value="12h">12 hours</option>
+					<option value="1d">1 day</option>
+				</select>
+				<input type="submit" value="Submit">
+			</form>
 		</div>
 
-		<div class="break"></div>
-
 		<!-- Temperature Graph -->
-		<div class="graph-container">
-			<div class="graph">
-				<h3 class="subtitle">Historic Temperatures</h3><br>
-				<canvas id="graph"></canvas><br>
-			</div>
+		<div class="row content">
+			<canvas id="graph"></canvas>
 		</div>
 	</div>
 
 	
-
 	<!-- Chart.js -->
-	<!-- 6 Hours -->
 	<script type="text/javascript">
-		var ctx = document.getElementById('sixHour').getContext('2d');
-		var sixHour = new Chart(ctx, {
+		var ctx = document.getElementById('graph').getContext('2d');
+		var graph = new Chart(ctx, {
 			type:  'line',
 			data: {
 				labels: [],
 				datasets: [{
 					label: "Temperature",
-					data: [],
+					data: [<%= data %>],
 					borderColor: '#9eb5ff',
 					fill: false
 				}]
@@ -122,7 +112,7 @@
 			    },
 			    elements: {
                     point:{
-                        radius: 0
+                        radius: 2
                     }
                 }
 			}
