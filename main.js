@@ -50,6 +50,7 @@ app.get('/temps', (req, res) => {
 	datetime.end = datetime.end.slice(0,endIndex);
 
 	res.render('pages/temps', {
+		labels: debug.demoLabels,
 		data: debug.demoData,
 		begin: datetime.begin,
 		end: datetime.end

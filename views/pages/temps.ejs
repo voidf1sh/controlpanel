@@ -61,7 +61,7 @@
 		var graph = new Chart(ctx, {
 			type:  'line',
 			data: {
-				labels: [],
+				labels: [<%= labels %>],
 				datasets: [{
 					label: "Temperature",
 					data: [<%= data %>],
