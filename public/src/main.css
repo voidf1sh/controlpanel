@@ -8,14 +8,17 @@
 	src: url(../fonts/CaviarDreams.ttf);
 }
 
-html {
+html, body {
+	margin: 0px;
+	height: 100%;
+}
+
+body {
 	background-color: #4158D0;
 	background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
 	background-size: cover;
 	background-attachment: fixed;
 	color: white;
-	margin: 0px;
-	height: 100%;
 }
 
 .header {
@@ -75,10 +78,14 @@ tr td {
 
 .box .row.content {
 	flex: 1 1 auto;
+	position: relative;
+	padding: 5px;
 }
 
 .graph-container {
-	background-color: rgba(0,0,0,0.5);
+	background-color: rgba(0,0,0,0.6);
+	border-radius: 10px;
+	margin: 5px;
 }
 
 h3 {
@@ -105,6 +112,15 @@ h3 {
 
 }
 
+#filter-button {
+	display: none;
+	padding: 5px;
+}
+
+#filters {
+	padding: 5px;
+}
+
 a {
 	color: white;
 	/*text-decoration: none;*/
@@ -114,8 +130,14 @@ a {
 	.left, .right, .center {
 		text-align: center;
 	}
-	input, select {
+	input, select, button {
 		width: 100%;
 		height: 50px;
+	}
+	#filter-button {
+		display: block;
+	}
+	#filters {
+		display: none;
 	}
 }

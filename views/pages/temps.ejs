@@ -11,7 +11,7 @@
 	<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous"> -->
 	
 	<!-- Chart.js -->
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@3.5.0/dist/chart.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="./src/main.css">
 </head>
 <body>
@@ -20,103 +20,145 @@
 		<div class="row header">
 			<!-- Header -->
 			<%- include('../partials/_header') -%>
+			<div id="filter-button">
+				<button onclick="toggleFilters()">Show/Hide Filters</button>
+			</div>
 			<!-- Sensor, Datetime, and Interval Selection -->
-			<form action="temps" method="POST">
-				<label for="sensor_id">Sensor:</label>
-				<select id="sensor_id" name="sensor_id">
-					<option value="28-00000676d99f">Living Room (Head)</option>
-					<option value="28-000007297e74">Living Room (Ceiling)</option>
-					<option value="28-000006779ad0">28-000006779ad0</option>
-					<option value="28-000006788573">28-000006788573</option>
-					<option value="28-000004d07f35">28-000004d07f35</option>
-					<option value="28-00000728fb18">28-00000728fb18</option>
-				</select>
-				<label for="begin">Begin:</label>
-				<input type="datetime-local" name="begin" value="<%= begin %>">
-				<label for="end">End:</label>
-				<input type="datetime-local" name="end" value="<%= end %>">
-				<label for="interval">Interval:</label>
-				<select id="interval" name="interval">
-					<option value="5m">5 minutes</option>
-					<option value="30m">30 minutes</option>
-					<option value="1h">1 hour</option>
-					<option value="6h">6 hours</option>
-					<option value="12h">12 hours</option>
-					<option value="1d">1 day</option>
-				</select>
-				<input type="submit" value="Submit">
-			</form>
+			<div class="center" id="filters">
+				<form action="temps" method="POST">
+					<label for="sensor_id">Sensor:</label>
+					<select id="sensor_id" name="sensor_id">
+						<option value="28-00000676d99f">Living Room (Head)</option>
+						<option value="28-000007297e74">Living Room (Ceiling)</option>
+						<option value="28-000006779ad0">28-000006779ad0</option>
+						<option value="28-000006788573">28-000006788573</option>
+						<option value="28-000004d07f35">28-000004d07f35</option>
+						<option value="28-00000728fb18">28-00000728fb18</option>
+					</select>
+					<label for="begin">Begin:</label>
+					<input type="datetime-local" name="begin" value="<%= begin %>">
+					<label for="end">End:</label>
+					<input type="datetime-local" name="end" value="<%= end %>">
+					<label for="interval">Interval:</label>
+					<select id="interval" name="interval">
+						<option value="5m">5 minutes</option>
+						<option value="30m">30 minutes</option>
+						<option value="1h">1 hour</option>
+						<option value="6h">6 hours</option>
+						<option value="12h">12 hours</option>
+						<option value="1d">1 day</option>
+					</select>
+					<input type="submit" value="Submit">
+					<input type="reset" value="Reset">
+				</form>
+			</div>
+			
 		</div>
 
 		<!-- Temperature Graph -->
-		<div class="row content">
+		<div class="row content graph-container">
 			<canvas id="graph"></canvas>
 		</div>
 	</div>
+
+	<!-- Filter Toggle on Mobile Script -->
+	<script>
+		let visible = false;
+		function toggleFilters() {
+			if (visible) {
+				document.getElementById('filters').style.display = 'none';
+				visible = false;
+			} else {
+				document.getElementById('filters').style.display = 'block';
+				visible = true;
+			}
+		}
+	</script>
 
 	
 	<!-- Chart.js -->
 	<script type="text/javascript">
 		var ctx = document.getElementById('graph').getContext('2d');
-		var graph = new Chart(ctx, {
-			type:  'line',
-			data: {
-				labels: [<%= labels %>],
-				datasets: [{
-					label: "Temperature",
-					data: [<%= data %>],
-					borderColor: '#9eb5ff',
-					fill: false
-				}]
-			},
-			options: {
-				layout: {
-					padding: {
-						left: 0,
-						right: 4,
-						top: 0,
-						bottom: 0
-					}
-				},
-				maintainAspectRatio: false,
-				scales: {
-					xAxes: [{
-						gridLines: {
-							color: '#888888'
-						},
-						ticks: {
-							fontColor: '#AAAAAA',
-							maxTicksLimit: 10
-						}
-					}],
-					yAxes: [{
-						gridLines: {
-							color: '#888888'
-						},
-						ticks: {
-							fontColor: '#AAAAAA',
-							suggestedMin: 50,
-							suggestedMax: 80
+		
+		let width, height, gradient;
+		function getGradient(ctx, chartArea) {
+			const chartWidth = chartArea.right - chartArea.left;
+			const chartHeight = chartArea.bottom - chartArea.top;
+			if (gradient === null || width !== chartWidth || height !== chartHeight) {
+				// Create the gradient because this is either the first render
+				// or the size of the chart has changed
+				width = chartWidth;
+				height = chartHeight;
+				gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+				gradient.addColorStop(0, 'rgb(0,0,255)');
+				gradient.addColorStop(1, 'rgb(255,0,0)');
+			}
+
+			return gradient;
+		}
+
+		window.onload = () => {
+			var labels = <%- JSON.stringify(labels) %>;
+			var graph = new Chart(ctx, {
+				type:  'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: "Temperature",
+						data: [<%= data %>],
+						borderColor: '#9eb5ff',
+						fill: {
+							target: '80',
+							below: ''
 						}
 					}]
 				},
-			    legend: {
-			        display: false
-			    },
-			    tooltips: {
-			        callbacks: {
-			           label: function(tooltipItem) {
-			                  return tooltipItem.yLabel;
-			           }
-			        }
-			    },
-			    elements: {
-                    point:{
-                        radius: 2
-                    }
-                }
-			}
-		});
+				options: {
+					layout: {
+						padding: {
+							left: 0,
+							right: 4,
+							top: 0,
+							bottom: 0
+						}
+					},
+					maintainAspectRatio: false,
+					scales: {
+						y: {
+							suggestedMin: 65,
+							suggestedMax: 80
+						},
+						x: {
+							ticks: {
+								maxTicksLimit: 15
+							}
+						}
+					},
+					legend: {
+						display: false
+					},
+					tooltips: {
+						callbacks: {
+						label: function(tooltipItem) {
+								return tooltipItem.yLabel;
+						}
+						}
+					},
+					elements: {
+						point:{
+							radius: 2
+						}
+					},
+					responsive: true,
+					tension: 0.6,
+					plugins: {
+						legend: {
+							display: false
+						}
+					}
+				}
+			});
+		}
 	</script>
 </body>
 </html>
