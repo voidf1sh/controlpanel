@@ -28,6 +28,9 @@ app.listen(process.env.listenPort);
 // Import custom functions module
 const fn = require('./functions.js');
 
+// Temporary import of temperatures for script testing
+const temps = require('./public/src/temperatures.js');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -57,11 +60,12 @@ app.get('/temps', (req, response) => {
 			data.push(row.temperature);
 		}
 
-		console.log(fn.groupByHour(beginDate, res));
+		const groups = temps.groupByMins(beginDate, res, 15);
+		console.log(groups);
 
 		response.render('pages/temps', {
-			labels: labels,
-			data: data,
+			labels: Object.keys(groups),
+			data: Object.values(groups),
 			begin: htmldate.begin,
 			end: htmldate.end
 		});
