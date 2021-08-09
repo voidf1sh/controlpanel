@@ -91,8 +91,7 @@ app.post('/temps', (req, response) => {
 		}
 
 		response.render('pages/temps', {
-			labels: labels,
-			data: data,
+			rawData: res,
 			begin: htmldate.begin,
 			end: htmldate.end
 		});

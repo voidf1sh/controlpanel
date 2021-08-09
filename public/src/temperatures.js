@@ -89,6 +89,86 @@ function groupByMins(begin, data, minutes) {
 	return groups;
 }
 
+function groupByHours(begin, data, hours) {
+	const beginDate = new Date(begin);
+	let groups = {};
+	let splitHours = [];
+	const intervalsPerDay = 24 / hours;
+	for (let i = 1; i <= intervalsPerDay; i++) {
+		splitHours.push((i * hours));
+	}	// (hours: 6) splitHours = [6, 12, 18, 24]
+
+	// Set the current date information for the first loop
+	let current = {
+		year: beginDate.getFullYear(),
+		month: beginDate.getMonth(),
+		date: beginDate.getDate(),
+		hour: beginDate.getHours(),
+		interval: splitHours.find(e => e > beginDate.getHours())
+	}
+	
+
+	for (const row of data) {
+		const dateString = new Date(row.timestamp)
+		.setMinutes(0,0,0);
+		const date = new Date(dateString);
+		
+
+		const match = {
+			year: date.getFullYear() == current.year,
+			month: date.getMonth() == current.month,
+			date: date.getDate() == current.date,
+			interval: date.getHours() <= current.interval
+		}
+
+		if (date.getHours() == 0) {
+			current.interval = splitHours[0];
+		}
+		const intervalTimestamp = new Date(dateString).setHours(current.interval,0,0,0);
+		const intervalDate = new Date(intervalTimestamp);
+
+		if (match.year) {
+			if (match.month) {
+				if (match.date) {
+					if (match.interval) {
+						if (!(Object.keys(groups).includes(intervalDate.toISOString()))) {
+							groups[intervalDate.toISOString()] = [];
+						}
+						groups[intervalDate.toISOString()].push(row.temperature);
+					} else {
+						current.interval = splitHours.find(e => e > date.getHours());
+						groups[intervalDate.toISOString()] = [];
+						groups[intervalDate.toISOString()].push(row.temperature);
+					}
+				} else {
+					current.date = date.getDate();
+					current.interval = splitHours.find(e => e > date.getHours());
+					groups[intervalDate.toISOString()] = [];
+					groups[intervalDate.toISOString()].push(row.temperature);
+				}
+			} else {
+				current.month = date.getMonth();
+				current.date = date.getDate();
+				current.interval = splitHours.find(e => e > date.getHours());
+				groups[intervalDate.toISOString()] = [];
+				groups[intervalDate.toISOString()].push(row.temperature);
+			}
+		} else {
+			current.year = date.getFullYear();
+			current.month = date.getMonth();
+			current.date = date.getDate();
+			current.interval = splitHours.find(e => e > date.getHours());
+			groups[intervalDate.toISOString()] = [];
+			groups[intervalDate.toISOString()].push(row.temperature);
+		}
+	}
+	for (const key in groups) {
+		const averageTemp = this.getAverage(groups[key]);
+		groups[key] = averageTemp;
+	}
+	return groups;
+}
+
 function groupByHour(begin, data) {
 	// groups = {
 	// 	timestamp: [temperatures],
@@ -128,22 +208,8 @@ function groupByHour(begin, data) {
 			if (match.month) {
 				if (match.date) {
 					if (match.hour) {
-						const temp = row.temperature;
-						const timestamp = row.timestamp;
-						// console.log({
-						// 	match.hour,
-						// 	temp,
-						// 	timestamp
-						// });
 						groups[date.toISOString()].push(row.temperature);
 					} else {
-						const temp = row.temperature;
-						const timestamp = row.timestamp;
-						// console.log({
-						// 	match.hour,
-						// 	temp,
-						// 	timestamp
-						// });
 						current.hour = date.getHours();
 						groups[date.toISOString()] = [];
 						groups[date.toISOString()].push(row.temperature);
@@ -166,6 +232,60 @@ function groupByHour(begin, data) {
 			current.month = date.getMonth();
 			current.date = date.getDate();
 			current.hour = date.getHours();
+			groups[date.toISOString()] = [];
+			groups[date.toISOString()].push(row.temperature);
+		}
+	}
+	for (const key in groups) {
+		const averageTemp = this.getAverage(groups[key]);
+		groups[key] = averageTemp;
+	}
+	return groups;
+}
+
+function groupByDay(begin, data) {
+	const beginDate = new Date(begin);
+	let groups = {};
+	// Set the current date information for the first loop
+	let current = {
+		year: beginDate.getFullYear(),
+		month: beginDate.getMonth(),
+		date: beginDate.getDate(),
+	}
+
+	for (const row of data) {
+		const dateString = new Date(row.timestamp)
+		.setHours(12,0,0,0);
+		const date = new Date(dateString);
+		if (!(Object.keys(groups).includes(date.toISOString()))) {
+			groups[date.toISOString()] = [];
+		}
+
+		const match = {
+			year: date.getFullYear() == current.year,
+			month: date.getMonth() == current.month,
+			date: date.getDate() == current.date
+		}
+
+		if (match.year) {
+			if (match.month) {
+				if (match.date) {
+					groups[date.toISOString()].push(row.temperature);
+				} else {
+					current.date = date.getDate();
+					groups[date.toISOString()] = [];
+					groups[date.toISOString()].push(row.temperature);
+				}
+			} else {
+				current.month = date.getMonth();
+				current.date = date.getDate();
+				groups[date.toISOString()] = [];
+				groups[date.toISOString()].push(row.temperature);
+			}
+		} else {
+			current.year = date.getFullYear();
+			current.month = date.getMonth();
+			current.date = date.getDate();
 			groups[date.toISOString()] = [];
 			groups[date.toISOString()].push(row.temperature);
 		}

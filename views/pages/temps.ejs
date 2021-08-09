@@ -203,10 +203,34 @@
 					}
 					break;
 				case '6h':
+					newData = groupByHours(begin, rawData, 6);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
 					break;
 				case '12h':
+					newData = groupByHours(begin, rawData, 12);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
 					break;
 				case '1d':
+					newData = groupByDay(begin, rawData);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
 					break;
 				default:
 					break;
