@@ -60,12 +60,8 @@ app.get('/temps', (req, response) => {
 			data.push(row.temperature);
 		}
 
-		const groups = temps.groupByMins(beginDate, res, 15);
-		console.log(groups);
-
 		response.render('pages/temps', {
-			labels: Object.keys(groups),
-			data: Object.values(groups),
+			rawData: res,
 			begin: htmldate.begin,
 			end: htmldate.end
 		});

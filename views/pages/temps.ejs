@@ -3,6 +3,11 @@
 <head>
 	<title>Temperature Graphs</title>
 
+	<!-- js global variables -->
+	<script>
+		const debug = true;
+	</script>
+
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -12,10 +17,12 @@
 	
 	<!-- Chart.js -->
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@3.5.0/dist/chart.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="./src/main.css">
+	<!-- CSS -->
+	<link rel="stylesheet" type="text/css" href="/src/main.css">
+	<!-- Script for grouping and averaging temperatures -->
+	<script type="text/javascript" src="/src/temperatures.js"></script>
 </head>
 <body>
-	
 	<div class="box">
 		<div class="row header">
 			<!-- Header -->
@@ -52,6 +59,7 @@
 					<input type="reset" value="Reset">
 				</form>
 			</div>
+			<div id="firstlast" style="display: none;"></div>
 			
 		</div>
 
@@ -73,92 +81,132 @@
 				visible = true;
 			}
 		}
+
+		// Debug unhiding
+		window.onload = () => {
+			if (debug) {
+			document.getElementById("firstlast").style.display = "block";
+		}
+	}
 	</script>
 
+	<!-- Handling of raw data from the server -->
+	<script type="text/javascript">
+		const rawData = <%- JSON.stringify(rawData) %>;
+		const begin = <%- JSON.stringify(begin) %>;
+		let data = groupByMins(begin, rawData, 15);
+		if (debug) {
+			const timestamps = Object.keys(data);
+			document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+		}
+	</script>
 	
 	<!-- Chart.js -->
 	<script type="text/javascript">
 		var ctx = document.getElementById('graph').getContext('2d');
-		
-		let width, height, gradient;
-		function getGradient(ctx, chartArea) {
-			const chartWidth = chartArea.right - chartArea.left;
-			const chartHeight = chartArea.bottom - chartArea.top;
-			if (gradient === null || width !== chartWidth || height !== chartHeight) {
-				// Create the gradient because this is either the first render
-				// or the size of the chart has changed
-				width = chartWidth;
-				height = chartHeight;
-				gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-				gradient.addColorStop(0, 'rgb(0,0,255)');
-				gradient.addColorStop(1, 'rgb(255,0,0)');
-			}
-
-			return gradient;
-		}
-
-		window.onload = () => {
-			var labels = <%- JSON.stringify(labels) %>;
-			var graph = new Chart(ctx, {
-				type:  'line',
-				data: {
-					labels: labels,
-					datasets: [{
-						label: "Temperature",
-						data: [<%= data %>],
-						borderColor: '#9eb5ff',
-						fill: {
-							target: '80',
-							below: ''
-						}
-					}]
+		var graph = new Chart(ctx, {
+			type:  'line',
+			data: {
+				labels: Object.keys(data),
+				datasets: [{
+					label: "Temperature",
+					data: Object.values(data),
+					borderColor: '#9eb5ff',
+					fill: {
+						target: '80',
+						below: ''
+					}
+				}]
+			},
+			options: {
+				layout: {
+					padding: {
+						left: 0,
+						right: 4,
+						top: 0,
+						bottom: 0
+					}
 				},
-				options: {
-					layout: {
-						padding: {
-							left: 0,
-							right: 4,
-							top: 0,
-							bottom: 0
-						}
+				maintainAspectRatio: false,
+				scales: {
+					y: {
+						suggestedMin: 65,
+						suggestedMax: 80
 					},
-					maintainAspectRatio: false,
-					scales: {
-						y: {
-							suggestedMin: 65,
-							suggestedMax: 80
-						},
-						x: {
-							ticks: {
-								maxTicksLimit: 15
-							}
-						}
-					},
-					legend: {
-						display: false
-					},
-					tooltips: {
-						callbacks: {
-						label: function(tooltipItem) {
-								return tooltipItem.yLabel;
-						}
-						}
-					},
-					elements: {
-						point:{
-							radius: 6
-						}
-					},
-					responsive: true,
-					tension: 0.25,
-					plugins: {
-						legend: {
-							display: false
+					x: {
+						ticks: {
+							maxTicksLimit: 15
 						}
 					}
+				},
+				legend: {
+					display: false
+				},
+				tooltips: {
+					callbacks: {
+					label: function(tooltipItem) {
+							return tooltipItem.yLabel;
+					}
+					}
+				},
+				elements: {
+					point:{
+						radius: 4
+					}
+				},
+				responsive: true,
+				tension: 0.25,
+				plugins: {
+					legend: {
+						display: false
+					}
 				}
-			});
-		}
+			}
+		});
+	</script>
+
+	<!-- Interval Change Handling -->
+	<script>
+		const intervalSelect = document.getElementById('interval')
+
+		intervalSelect.addEventListener('change', (event) => {
+			let newData;
+			switch (event.target.value) {
+				case '5m':
+					newData = groupByRaw(rawData);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						const timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
+					break;
+				case '30m':
+					newData = groupByMins(begin, rawData, 30);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						const timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
+					break;
+				case '1h':
+					newData = groupByHour(begin, rawData);
+					graph.data.labels = Object.keys(newData)
+					graph.data.datasets.data = Object.values(newData);
+					graph.update();
+					if (debug) {
+						timestamps = Object.keys(newData);
+						document.getElementById("firstlast").content = `${timestamps[0]} - ${timestamps[timestamps.length - 1]}`;
+					}
+					break;
+					break;
+				default:
+					break;
+			}
+		})
 	</script>
 </body>
 </html>
