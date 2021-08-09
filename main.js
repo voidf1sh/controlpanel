@@ -1,6 +1,6 @@
 /*
 *	Environment Variables:
-*	dbAddress
+*	dbHost
 *	dbName
 *	dbUser
 *	dbPass
